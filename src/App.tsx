@@ -39,7 +39,7 @@ const App: Component = () => {
   }
 
   return (
-    <main class="bg-[#F5F5EE] flex h-screen px-20 pt-40 flex-col space-y-5">
+    <main class="bg-[#F5F5EE] flex min-h-screen px-20 pt-40 flex-col space-y-5">
       <p class="text-3xl"> Startup Directory Search </p>
       <div class="flex space-x-2">
         <input

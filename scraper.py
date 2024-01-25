@@ -37,15 +37,17 @@ class Company:
             "image_url": self.image_url,
         }
 
-        data = trieve.CreateChunkData(chunk_html=self.description, metadata=metadata, link=self.link, tracking_id=f"{self.link}-description")
-        try:
-            # Create a Chunk
-            api_response = api_instance.create_chunk(data)
-        except ApiException as e:
-            print("Exception when calling AuthApi->create_chunk: %s\n" % e)
+        data = trieve.CreateChunkData(chunk_html=self.description, metadata=metadata, link=self.link, tracking_id=f"{self.link}-description", tag_set="description")
+        if self.description != "":
+            try:
+                # Create a Chunk
+                api_response = api_instance.create_chunk(data)
+            except ApiException as e:
+                print("Exception when calling AuthApi->create_chunk: %s\n" % e)
 
         for i, founder in enumerate(self.founders):
-            data = trieve.CreateChunkData(chunk_html=founder, metadata=metadata, link=self.link, tracking_id=f"{self.link}-founder-{i}")
+            if founder == "": continue
+            data = trieve.CreateChunkData(chunk_html=founder, metadata=metadata, link=self.link, tracking_id=f"{self.link}-founder-{i}", tag_set="founder")
             try:
                 # Create a Chunk
                 api_response = api_instance.create_chunk(data)
