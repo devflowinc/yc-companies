@@ -61,25 +61,39 @@ const App: Component = () => {
         {(resultChunk) => (
           <div class="flex flex-col space-y-2">
             <For each={resultChunk.metadata}>
-              {(metadata) => (
-                <a class="company" href={metadata.link}>
-                  <div class="relative flex w-full items-center justify-start"><div class="flex w-20 shrink-0 grow-0 basis-20 items-center pr-4">
-                    <img src={metadata.metadata.image_url} alt="" role="presentation" class="rounded-full bg-gray-100" />
-                  </div>
-                    <div class="flex flex-1 items-center justify-between">
-                      <div class="lg:max-w-[90%]">
-                        <div>
-                          <span class="text-xl font-bold">{metadata.metadata.company}</span>
-                          <span class="text-base font-thin"> Similatrity {resultChunk.score}</span>
-                        </div>
-                        <div class="flex">
-                          <span class="text-base font-thin">{metadata.content}</span>
+              {(metadata) => {
+                let matchedOn = "";
+                console.log(metadata);
+                if (metadata.tracking_id.includes("founder")) {
+                  matchedOn = "Company Founders";
+                } else if (metadata.tracking_id.includes("description")) {
+                  matchedOn = "Company Description";
+                }
+
+                return (
+                  <a class="bg-[#fdfdf8] p-5 border-b border-[#ccc] text-lg flex items-center relative" href={metadata.link}>
+                    <div class="relative flex w-full items-center justify-start">
+                      <div class="flex w-20 shrink-0 grow-0 basis-20 items-center pr-4">
+                        <img src={metadata.metadata.image_url} alt="" role="presentation" class="rounded-full bg-gray-100" />
+                      </div>
+                      <div class="flex flex-1 items-center justify-between">
+                        <div class="lg:max-w-[90%]">
+                          <div>
+                            <span class="text-xl font-bold">{metadata.metadata.company}</span>
+                            <span class="text-base font-thin"> Similatrity {resultChunk.score}</span>
+                          </div>
+                          <div class="flex">
+                            <span class="text-base font-thin">{metadata.metadata.title}</span>
+                          </div>
                         </div>
                       </div>
+                      <div class="">
+                        <p class="text-sm">Matched On: {matchedOn}</p>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              )}
+                  </a>
+                );
+              }}
             </For>
           </div>
         )}
