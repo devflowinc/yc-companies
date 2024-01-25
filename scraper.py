@@ -1,39 +1,58 @@
 import bs4 as bs
 import urllib.request
 import time
+from dotenv import load_dotenv
+import os
 import trieve_python_client as trieve
 from trieve_python_client.api_client import ApiClient
 from trieve_python_client.rest import ApiException
 from trieve_python_client.configuration import Configuration
 
-api_key = "tr-********************************"
-dataset_id = "************************************"
+load_dotenv()
+api_key = os.getenv("VITE_API_KEY")
+dataset_id = os.getenv("VITE_DATASET_ID")
 api_client = ApiClient(Configuration(host="https://api.trieve.ai"))
+
 api_client.default_headers = {
     "Authorization": api_key,
     "TR-Dataset": dataset_id,
 }
 
 class Company:
-    def __init__(self, title, link, company, description, founders):
+    def __init__(self, *, title, link, company, description, founders, image_url):
         self.title = title
         self.link = link
         self.company = company
         self.description = description
         self.founders = founders
+        self.image_url = image_url
 
     def send_to_trieve(self):
         # Create an instance of the API class
         api_instance = trieve.ChunkApi(api_client)
 
-        data = trieve.CreateChunkData(chunk_html=self.description, metadata={"title": self.title}, link=self.link, tracking_id=self.link)
+        metadata = {
+            "title": self.title,
+            "company": self.company,
+            "image_url": self.image_url,
+        }
+
+        data = trieve.CreateChunkData(chunk_html=self.description, metadata=metadata, link=self.link, tracking_id=f"{self.link}-description")
         try:
             # Create a Chunk
             api_response = api_instance.create_chunk(data)
         except ApiException as e:
             print("Exception when calling AuthApi->create_chunk: %s\n" % e)
 
-    def __str__(self):
+        for i, founder in enumerate(self.founders):
+            data = trieve.CreateChunkData(chunk_html=founder, metadata=metadata, link=self.link, tracking_id=f"{self.link}-founder-{i}")
+            try:
+                # Create a Chunk
+                api_response = api_instance.create_chunk(data)
+            except ApiException as e:
+                print("Exception when calling AuthApi->create_chunk: %s\n" % e)
+
+    def __repr__(self):
         return f"Title: {self.title}\nLink: {self.link}\nCompany: {self.company}\nDescription: {self.description}\nFounders: {self.founders}\n"
 
 
@@ -134,32 +153,31 @@ links = [
     "https://www.ycombinator.com/companies/agenthub"
 ]
 
-https://www.ycombinator.com/companies/roe-ai,
-https://www.ycombinator.com/companies/starlight-charging,
-https://www.ycombinator.com/companies/octolane-ai,
-https://www.ycombinator.com/companies/just-words,
-
 companies = []
 
-for url in links:
-    source = urllib.request.urlopen(url).read()
-    soup = bs.BeautifulSoup(source,'html.parser')
-    time.sleep(0.05)
+# for url in links:
+url = links[0]
 
-    founders = list(map(lambda x:x.text, soup.find_all("div", {"class": "flex flex-row flex-col items-start gap-3 md:flex-row"})))
+source = urllib.request.urlopen(url).read()
+soup = bs.BeautifulSoup(source,'html.parser')
+time.sleep(0.50)
 
-    try:
-        company = {
-            "title": soup.find("div", {"class": "text-xl"}).text,
-            "link": url,
-            "company": soup.find("h1", {"class": "font-extralight"}).text,
-            "description": soup.find("p", {"class": "whitespace-pre-line"}).text,
-            "founders": founders
-        }
+founders = list(map(lambda x:x.text, soup.find_all("div", {"class": "flex flex-row flex-col items-start gap-3 md:flex-row"})))
 
-        companies.append(Company(**company))
-    except AttributeError as e:
-        print("Error with: " + url + " " + str(e))
+try:
+    company = {
+        "title": soup.find("div", {"class": "text-xl"}).text,
+        "link": url,
+        "company": soup.find("h1", {"class": "font-extralight"}).text,
+        "description": soup.find("p", {"class": "whitespace-pre-line"}).text,
+        "founders": founders,
+        "image_url": soup.findAll("img")[1]["src"]
+    }
+
+    companies.append(Company(**company))
+except AttributeError as e:
+    print("Error with: " + url + " " + str(e))
+
 
 for company in companies:
     company.send_to_trieve()
