@@ -1,11 +1,15 @@
 import { createSignal, type Component, For } from 'solid-js';
 
+type SearchType = "semantic" | "hybrid" | "full_text";
+
 const App: Component = () => {
   const [searchQuery, setSearchQuery] = createSignal('');
   const [resultChunks, setResultChunks] = createSignal<any>();
   const [searchResults, setSearchResults] = createSignal([]);
   const [totalPages, setTotalPages] = createSignal(0);
   const [fetching, setFetching] = createSignal(false);
+  // Really its just SearchType, but I'm not sure how to get the type to work
+  const [searchType, setSearchType] = createSignal<string | SearchType>("hybrid");
 
   const datasetId = import.meta.env.VITE_DATASET_ID;
   const apiKey = import.meta.env.VITE_API_KEY;
@@ -22,7 +26,7 @@ const App: Component = () => {
       body: JSON.stringify({
         page: 0,
         query: searchQuery(),
-        search_type: "semantic",
+        search_type: searchType(),
       }),
     }).then((response) => {
       if (response.ok) {
@@ -55,7 +59,22 @@ const App: Component = () => {
         />
         <button onClick={searchCompanies}>Search</button>
       </div>
-
+      <div class="flex space-x-2 items-center">
+        <label for="searchType">Search Type</label>
+        <select
+          id="searchType"
+          name="searchType"
+          class="rounded-md border-0 bg-white py-1.5 pl-3 pr-10 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-magenta-600 sm:text-sm sm:leading-6"
+          value={searchType()}
+          onInput={(e) =>
+            setSearchType(e.currentTarget.value)
+          }
+        >
+          <option selected>hybrid</option>
+          <option>semantic</option>
+          <option>full_text</option>
+        </select>
+      </div>
       <p>Results:</p>
       <For each={resultChunks()}>
         {(resultChunk) => (
