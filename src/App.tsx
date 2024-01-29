@@ -49,12 +49,7 @@ const App: Component = () => {
         <input
           type="text"
           placeholder="Search"
-          value={searchResults()}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              searchCompanies();
-            }
-          }}
+          value={searchQuery()}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
         />
         <button onClick={searchCompanies}>Search</button>
@@ -75,7 +70,7 @@ const App: Component = () => {
           <option>full_text</option>
         </select>
       </div>
-      <p>Results:</p>
+      <p>Results: </p>
       <For each={resultChunks()}>
         {(resultChunk) => (
           <div class="flex flex-col space-y-2">
