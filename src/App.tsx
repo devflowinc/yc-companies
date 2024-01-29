@@ -1,11 +1,10 @@
 import { createSignal, type Component, For } from 'solid-js';
 
-type SearchType = "semantic" | "hybrid" | "full_text";
+type SearchType = "semantic" | "hybrid" | "fulltext";
 
 const App: Component = () => {
   const [searchQuery, setSearchQuery] = createSignal('');
   const [resultChunks, setResultChunks] = createSignal<any>();
-  const [searchResults, setSearchResults] = createSignal([]);
   const [totalPages, setTotalPages] = createSignal(0);
   const [fetching, setFetching] = createSignal(false);
   // Really its just SearchType, but I'm not sure how to get the type to work
@@ -27,6 +26,7 @@ const App: Component = () => {
         page: 0,
         query: searchQuery(),
         search_type: searchType(),
+        cross_encoder: false
       }),
     }).then((response) => {
       if (response.ok) {
@@ -67,7 +67,7 @@ const App: Component = () => {
         >
           <option selected>hybrid</option>
           <option>semantic</option>
-          <option>full_text</option>
+          <option>fulltext</option>
         </select>
       </div>
       <p>Results: </p>
