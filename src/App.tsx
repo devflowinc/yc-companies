@@ -78,11 +78,11 @@ const App: Component = () => {
               {(metadata) => {
                 let matchedOn = "";
                 console.log(metadata);
-                if (metadata.tracking_id.includes("founder")) {
-                  matchedOn = "Company Founders";
-                } else if (metadata.tracking_id.includes("description")) {
-                  matchedOn = "Company Description";
-                }
+                // if (metadata.tracking_id.includes("founder")) {
+                //   matchedOn = "Company Founders";
+                // } else if (metadata.tracking_id.includes("description")) {
+                //   matchedOn = "Company Description";
+                // }
 
                 return (
                   <a class="bg-[#fdfdf8] p-5 border-b border-[#ccc] text-lg flex items-center relative" href={metadata.link}>
