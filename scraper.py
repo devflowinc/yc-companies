@@ -1,7 +1,6 @@
 import bs4 as bs
 import json
 import urllib.request
-import time
 from dotenv import load_dotenv
 import os
 import trieve_python_client as trieve
@@ -4536,8 +4535,8 @@ links = [
 ]
 
 load_dotenv()
-api_key = os.getenv("VITE_API_KEY")
-dataset_id = os.getenv("VITE_DATASET_ID")
+api_key = os.getenv("API_KEY")
+dataset_id = os.getenv("DATASET_ID")
 api_client = ApiClient(Configuration(host="https://api.trieve.ai"))
 
 api_client.default_headers = {
@@ -4563,7 +4562,7 @@ class Company:
             "image_url": self.image_url,
         }
 
-        data = trieve.CreateChunkData(chunk_html=f"{self.title}\n\n\n{self.description}", metadata=metadata, link=self.link, tracking_id=f"{self.link}-description-openai", tag_set="description")
+        data = trieve.CreateChunkData(chunk_html=f"{self.title}\n\n\n{self.description}", metadata=metadata, link=self.link, tracking_id=f"{self.link}-description", tag_set="description")
         if self.description != "":
             try:
                 # Create a Chunk
@@ -4607,7 +4606,9 @@ while len(links) > 0:
             "description": soup.find("p", {"class": "whitespace-pre-line"}).text,
             "image_url": soup.findAll("img")[1]["src"]
         }
-        Company(**company).dump_json(url_pair[0])
+        new_company = Company(**company)
+        print("sending to trieve", new_company.title)
+        new_company.send_to_trieve()
         processed.append(url_pair[0])
         print(len(links), "links /", start)
     except:
