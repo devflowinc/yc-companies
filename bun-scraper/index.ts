@@ -7,9 +7,9 @@ const document = window.document;
 
 const API_URL = Bun.env.API_URL;
 
-export interface ChunkData {
+export interface CreateChunkData {
   chunk_html: string;
-  group_id: string;
+  group_ids: string[];
   link: string;
   tag_set: string;
   tracking_id: string;
@@ -41,23 +41,7 @@ const createChunkGroup = async (name: string, description: string) => {
   return id;
 }
 
-const addChunkToGroup = (chunkId: string, groupId: string) => {
-  fetch(`${API_URL}/chunk_group/` + groupId, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': Bun.env.API_KEY ?? "",
-      'TR-Dataset': Bun.env.DATASET_ID ?? "",
-    },
-    body: JSON.stringify({
-      chunk_id: chunkId,
-    }),
-  })
-    .then(_ => console.log("success adding chunk to group", chunkId, groupId))
-    .catch(error => console.error("error adding chunk to group", error));
-}
-
-const createChunk = async (chunkData: ChunkData) => {
+const createChunk = async (chunkData: CreateChunkData) => {
   const response = await fetch(`${API_URL}/chunk`, {
     method: 'POST',
     headers: {
@@ -85,7 +69,7 @@ const createChunk = async (chunkData: ChunkData) => {
   return chunkId;
 }
 
-const processCompanyChunk = async (bulkDataCompany: any) => {
+const processCompanyChunk = async (bulkDataCompany: any, groupIds: string[]) => {
   const group_id = await createChunkGroup(bulkDataCompany.name, bulkDataCompany.one_liner);
 
   const companyName = "<h1>" + bulkDataCompany.name + "</h1>";
@@ -119,22 +103,21 @@ const processCompanyChunk = async (bulkDataCompany: any) => {
     company_logo_url,
   };
 
-  const chunkData: ChunkData = {
+  const chunkData: CreateChunkData = {
     chunk_html,
-    group_id,
+    group_ids: [group_id, ...groupIds],
     link,
     tag_set,
     tracking_id,
     metadata,
   };
 
-  const chunkId = await createChunk(chunkData);
-  addChunkToGroup(chunkId, companyGroupId);
+  await createChunk(chunkData);
 
   return group_id;
 }
 
-const processFounderChunk = async (bulkDataFounder: any, companyGroupId: string) => {
+const processFounderChunk = async (bulkDataFounder: any, groupIds: string[]) => {
   const fullName = bulkDataFounder.full_name ? ("<h1>" + bulkDataFounder.full_name + "</h1>") : "";
   const founderTitle = bulkDataFounder.title ? "<h3>" + bulkDataFounder.title + "</h3>" : "";
   const founderBio = bulkDataFounder.founder_bio ? "<p>" + bulkDataFounder.founder_bio + "</p>" : "";
@@ -155,44 +138,45 @@ const processFounderChunk = async (bulkDataFounder: any, companyGroupId: string)
     linkedin_url,
   };
 
-  const chunkData: ChunkData = {
+  const chunkData: CreateChunkData = {
     chunk_html,
-    group_id: companyGroupId,
+    group_ids: groupIds,
     link,
     tag_set,
     tracking_id,
     metadata,
   };
 
-  console.log(chunkData);
-
-  const chunkId = await createChunk(chunkData);
-  addChunkToGroup(chunkId, foundersGroupId);
+  await createChunk(chunkData);
 }
 
-const processLink = async (companyUrl: string) => {
-  const pageRespHtml = await fetch(companyUrl);
-  const pageRespText = await pageRespHtml.text();
-  document.body.innerHTML = pageRespText;
+const processLink = async (companyUrl: string, groupIds: string[]) => {
+  try {
+    const pageRespHtml = await fetch(companyUrl);
+    const pageRespText = await pageRespHtml.text();
+    document.body.innerHTML = pageRespText;
 
-  // get the first div that has a data-page attribute
-  const divs = document.body.querySelectorAll('div');
-  divs.forEach(async (div) => {
-    const dataPage = div?.getAttribute('data-page');
-    if (!dataPage) {
-      return;
-    }
+    // get the first div that has a data-page attribute
+    const divs = document.body.querySelectorAll('div');
+    divs.forEach(async (div) => {
+      const dataPage = div?.getAttribute('data-page');
+      if (!dataPage) {
+        return;
+      }
 
-    const bulkData = JSON.parse(dataPage).props as any;
-    const companyData = bulkData.company;
-    const companyGroupId = await processCompanyChunk(companyData);
+      const bulkData = JSON.parse(dataPage).props as any;
+      const companyData = bulkData.company;
+      const companyGroupId = await processCompanyChunk(companyData, groupIds);
 
-    const foundersData = companyData.founders;
-    foundersData.forEach(async (founder: any) => {
-      await processFounderChunk(founder, companyGroupId);
+      const foundersData = companyData.founders;
+      foundersData.forEach(async (founder: any) => {
+        await processFounderChunk(founder, [companyGroupId, ...groupIds]);
+      });
     });
-  });
-
+  } catch (e) {
+    console.error("error processing link", companyUrl, e);
+    return;
+  }
 }
 
 const companyGroupId = await createChunkGroup('YC Companies', 'Y Combinator companies');
@@ -200,10 +184,7 @@ const foundersGroupId = await createChunkGroup('YC Founders', 'Y Combinator foun
 const companyList = Bun.file("./yc-company-links.json");
 const companyLinks = JSON.parse(await companyList.text());
 
-companyLinks.forEach(async (companyUrl: string) => {
-  console.log("processing", companyUrl);
-  await processLink(companyUrl);
-});
-
-
+for (const companyUrl of companyLinks) {
+  await processLink(companyUrl, [companyGroupId, foundersGroupId]);
+}
 
