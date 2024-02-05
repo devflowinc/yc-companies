@@ -1,0 +1,15 @@
+{
+  "name": "bun-scraper",
+  "module": "index.ts",
+  "scripts": {
+    "run": "bun run index.ts"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^13.3.8",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
