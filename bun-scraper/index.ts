@@ -5,6 +5,8 @@ import { Window } from 'happy-dom';
 const window = new Window();
 const document = window.document;
 
+const API_URL = Bun.env.API_URL;
+
 export interface ChunkData {
   chunk_html: string;
   group_id: string;
@@ -15,52 +17,69 @@ export interface ChunkData {
 }
 
 const createChunkGroup = async (name: string, description: string) => {
-  const response = await fetch('https://api.trieve.ai/chunk_group', {
+  const response = await fetch(`${API_URL}/chunk_group`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': '',
-      'TR-Dataset': '',
+      'Authorization': Bun.env.API_KEY ?? "",
+      'TR-Dataset': Bun.env.DATASET_ID ?? "",
     },
     body: JSON.stringify({
       name,
       description,
     }),
-  });
+  })
 
   const responseJson = await response.json();
+  if (!response.ok) {
+    console.error("error creating chunk_group", responseJson.message);
+    return '';
+  }
+  console.log("success creating chunk_group", responseJson.id);
+
   const id = responseJson.id;
   return id;
 }
 
-const companyGroupId = await createChunkGroup('YC Companies', 'Y Combinator companies');
-const foundersGroupId = await createChunkGroup('YC Founders', 'Y Combinator founders');
-
 const addChunkToGroup = (chunkId: string, groupId: string) => {
-  fetch('https://api.trieve.ai/chunk_group/' + groupId, {
+  fetch(`${API_URL}/chunk_group/` + groupId, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': '',
-      'TR-Dataset': '',
+      'Authorization': Bun.env.API_KEY ?? "",
+      'TR-Dataset': Bun.env.DATASET_ID ?? "",
     },
     body: JSON.stringify({
       chunk_id: chunkId,
     }),
-  });
+  })
+    .then(_ => console.log("success adding chunk to group", chunkId, groupId))
+    .catch(error => console.error("error adding chunk to group", error));
 }
 
 const createChunk = async (chunkData: ChunkData) => {
-  const response = await fetch('https://api.trieve.ai/chunk', {
+  const response = await fetch(`${API_URL}/chunk`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': '',
-      'TR-Dataset': '',
+      'Authorization': Bun.env.API_KEY ?? "",
+      'TR-Dataset': Bun.env.DATASET_ID ?? "",
     },
     body: JSON.stringify(chunkData),
   });
+  if (!response.ok) {
+    console.error("error creating chunk", response.status, response.statusText);
+    const respText = await response.text();
+    console.error("error creating chunk", respText);
+    return '';
+  }
+
   const responseJson = await response.json();
+  if (!response.ok) {
+    console.error("error creating chunk", responseJson.message);
+    return '';
+  }
+  console.log("success creating chunk", responseJson.chunk_metadata.id);
   const chunkId = responseJson.chunk_metadata.id;
 
   return chunkId;
@@ -77,9 +96,9 @@ const processCompanyChunk = async (bulkDataCompany: any) => {
 
   const link = bulkDataCompany.ycdc_company_url;
 
-  const tag_set = bulkDataCompany.tags.join(', ') + ", " + bulkDataCompany.batch_name;
+  const tag_set = bulkDataCompany.tags.join(',') + ',' + bulkDataCompany.batch_name;
 
-  const tracking_id = bulkDataCompany.id;
+  const tracking_id = bulkDataCompany.id.toString();
 
   const batch = bulkDataCompany.batch_name;
   const company_country = bulkDataCompany.country;
@@ -116,16 +135,16 @@ const processCompanyChunk = async (bulkDataCompany: any) => {
 }
 
 const processFounderChunk = async (bulkDataFounder: any, companyGroupId: string) => {
-  const fullName = "<h1>" + bulkDataFounder.name + "</h1>";
-  const founderTitle = "<h3>" + bulkDataFounder.title + "</h3>";
-  const founderBio = "<p>" + bulkDataFounder.founder_bio + "</p>";
+  const fullName = bulkDataFounder.full_name ? ("<h1>" + bulkDataFounder.full_name + "</h1>") : "";
+  const founderTitle = bulkDataFounder.title ? "<h3>" + bulkDataFounder.title + "</h3>" : "";
+  const founderBio = bulkDataFounder.founder_bio ? "<p>" + bulkDataFounder.founder_bio + "</p>" : "";
   const chunk_html = "<div>" + fullName + founderTitle + founderBio + "</div>";
 
   const link = bulkDataFounder.latest_yc_company.href;
 
   const tag_set = '';
 
-  const tracking_id = bulkDataFounder.user_id;
+  const tracking_id = bulkDataFounder.user_id.toString();
 
   const avatar_thumb_url = bulkDataFounder.avatar_thumb_url;
   const twitter_url = bulkDataFounder.twitter_url;
@@ -145,11 +164,11 @@ const processFounderChunk = async (bulkDataFounder: any, companyGroupId: string)
     metadata,
   };
 
+  console.log(chunkData);
+
   const chunkId = await createChunk(chunkData);
   addChunkToGroup(chunkId, foundersGroupId);
 }
-
-
 
 const processLink = async (companyUrl: string) => {
   const pageRespHtml = await fetch(companyUrl);
@@ -165,16 +184,26 @@ const processLink = async (companyUrl: string) => {
     }
 
     const bulkData = JSON.parse(dataPage).props as any;
-    const companyData = JSON.parse(bulkData).company;
+    const companyData = bulkData.company;
     const companyGroupId = await processCompanyChunk(companyData);
 
     const foundersData = companyData.founders;
-    await processFounderChunk(foundersData, companyGroupId);
+    foundersData.forEach(async (founder: any) => {
+      await processFounderChunk(founder, companyGroupId);
+    });
   });
 
 }
 
-processLink('https://www.ycombinator.com/companies/ramen-vr');
+const companyGroupId = await createChunkGroup('YC Companies', 'Y Combinator companies');
+const foundersGroupId = await createChunkGroup('YC Founders', 'Y Combinator founders');
+const companyList = Bun.file("./yc-company-links.json");
+const companyLinks = JSON.parse(await companyList.text());
+
+companyLinks.forEach(async (companyUrl: string) => {
+  console.log("processing", companyUrl);
+  await processLink(companyUrl);
+});
 
 
 
