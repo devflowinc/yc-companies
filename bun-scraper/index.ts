@@ -80,26 +80,36 @@ const processCompanyChunk = async (bulkDataCompany: any, groupIds: string[]) => 
 
   const link = bulkDataCompany.ycdc_company_url;
 
-  const tag_set = bulkDataCompany.tags.join(',') + ',' + bulkDataCompany.batch_name;
+  const tag_set = bulkDataCompany.batch_name + "," + bulkDataCompany.tags.join(',') + "," + bulkDataCompany.city_tag;
 
   const tracking_id = bulkDataCompany.id.toString();
 
+  const company_name = bulkDataCompany.name;
+  const company_one_liner = bulkDataCompany.one_liner;
+  const company_long_description = bulkDataCompany.long_description;
   const batch = bulkDataCompany.batch_name;
+  const company_location = bulkDataCompany.location;
+  const company_city = bulkDataCompany.city;
+  const company_city_tag = bulkDataCompany.city_tag;
   const company_country = bulkDataCompany.country;
   const company_year_founded = bulkDataCompany.year_founded;
+  const company_website = bulkDataCompany.website;
   const company_linkedin = bulkDataCompany.linkedin_url;
   const company_twitter = bulkDataCompany.twitter_url;
   const company_facebook = bulkDataCompany.facebook_url;
   const company_crunchbase = bulkDataCompany.crunchbase_url;
   const company_logo_url = bulkDataCompany.small_logo_url;
   const metadata = {
-    companyName,
-    companyOneLiner,
-    companyLongDescription,
-    companyLocation,
+    company_name,
+    company_one_liner,
+    company_long_description,
     batch,
+    company_location,
+    company_city,
+    company_city_tag,
     company_country,
     company_year_founded,
+    company_website,
     company_linkedin,
     company_twitter,
     company_facebook,
@@ -175,10 +185,10 @@ const processLink = async (companyUrl: string, groupIds: string[]) => {
       const companyData = bulkData.company;
       const companyGroupId = await processCompanyChunk(companyData, groupIds);
 
-      const foundersData = companyData.founders;
-      foundersData.forEach(async (founder: any) => {
-        await processFounderChunk(founder, [companyGroupId, ...groupIds]);
-      });
+      // const foundersData = companyData.founders;
+      // foundersData.forEach(async (founder: any) => {
+      //   await processFounderChunk(founder, [companyGroupId, ...groupIds]);
+      // });
     });
   } catch (e) {
     console.error("error processing link", companyUrl, e);
