@@ -4,7 +4,14 @@ import {
   For,
   createEffect,
   onCleanup,
+  Show,
 } from "solid-js";
+
+const regex = /^[WS]\d{2}$/;
+
+const isBatchTag = (tag: string) => {
+  return regex.test(tag);
+};
 
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
@@ -17,7 +24,7 @@ const App: Component = () => {
   const [searchType, setSearchType] = createSignal<string | SearchType>(
     "fulltext"
   );
-  
+
   const apiUrl = import.meta.env.VITE_API_URL;
   const datasetId = import.meta.env.VITE_DATASET_ID;
   const apiKey = import.meta.env.VITE_API_KEY;
@@ -133,13 +140,64 @@ const App: Component = () => {
         </div>
         <div class="mt-2 border border-neutral-300 rounded-md">
           <For each={resultChunks()}>
-            {(chunk) => {
+            {(chunk, idx) => {
               console.log(chunk);
               return (
-              <div class="p-5 border">
-                {chunk.metadata[0].chunk_html}
-              </div>
-            )}}
+                <div
+                  classList={{
+                    "p-5 flex space-x-4": true,
+                    "border-t border-neutral-300": idx() > 0,
+                  }}
+                >
+                  <img
+                    alt="logo"
+                    class="block w-20 h-20 object-contain rounded-full bg-gray-100"
+                    src={chunk.metadata[0].metadata.company_logo_url}
+                  />
+                  <div class="flex flex-col space-y-1">
+                    <div class="flex space-x-2 items-end">
+                      <p class="text-lg font-bold">
+                        {chunk.metadata[0].metadata.company_name}
+                      </p>
+                      <p class="font-extralight text-neutral-700 text-sm">
+                        {chunk.metadata[0].metadata.company_location
+                          ? chunk.metadata[0].metadata.company_location + ", "
+                          : ""}
+                        {chunk.metadata[0].metadata.company_country}
+                      </p>
+                    </div>
+                    <p>{chunk.metadata[0].metadata.company_one_liner}</p>
+                    <div class="flex space-x-2">
+                      <For each={chunk.metadata[0].tag_set.split(",")}>
+                        {(tag) => (
+                          <>
+                            <p class="px-[10px] py-1 bg-[#E6E6DD] text-xs rounded-md font-extralight flex space-x-1">
+                              <Show when={isBatchTag(tag)}>
+                                <svg
+                                  aria-hidden="true"
+                                  data-prefix="fab"
+                                  data-icon="y-combinator"
+                                  class="text-orange-500 w-4 h-4"
+                                  role="img"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 448 512"
+                                >
+                                  <path
+                                    fill="currentColor"
+                                    d="M448 32v448H0V32h448zM236 287.5L313.5 142h-32.7L235 233c-4.7 9.3-9 18.3-12.8 26.8L210 233l-45.2-91h-35l76.7 143.8v94.5H236v-92.8z"
+                                  ></path>
+                                </svg>
+                              </Show>
+                              <span>{tag}</span>
+                            </p>
+                          </>
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
           </For>
         </div>
       </section>
