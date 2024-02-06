@@ -11,7 +11,7 @@ export interface CreateChunkData {
   chunk_html: string;
   group_ids: string[];
   link: string;
-  tag_set: string;
+  tag_set: string[];
   tracking_id: string;
   metadata: Object;
 }
@@ -93,6 +93,10 @@ const processCompanyChunk = async (bulkDataCompany: any, groupIds: string[]) => 
   const company_crunchbase = bulkDataCompany.crunchbase_url;
   const company_logo_url = bulkDataCompany.small_logo_url;
   const metadata = {
+    companyName,
+    companyOneLiner,
+    companyLongDescription,
+    companyLocation,
     batch,
     company_country,
     company_year_founded,
@@ -107,7 +111,7 @@ const processCompanyChunk = async (bulkDataCompany: any, groupIds: string[]) => 
     chunk_html,
     group_ids: [group_id, ...groupIds],
     link,
-    tag_set,
+    tag_set: tag_set.split(","),
     tracking_id,
     metadata,
   };
@@ -133,6 +137,9 @@ const processFounderChunk = async (bulkDataFounder: any, groupIds: string[]) => 
   const twitter_url = bulkDataFounder.twitter_url;
   const linkedin_url = bulkDataFounder.linkedin_url;
   const metadata = {
+    fullName,
+    founderTitle,
+    founderBio,
     avatar_thumb_url,
     twitter_url,
     linkedin_url,
@@ -142,7 +149,7 @@ const processFounderChunk = async (bulkDataFounder: any, groupIds: string[]) => 
     chunk_html,
     group_ids: groupIds,
     link,
-    tag_set,
+    tag_set: tag_set.split(","),
     tracking_id,
     metadata,
   };

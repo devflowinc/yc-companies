@@ -1,4 +1,10 @@
-import { createSignal, type Component, For } from "solid-js";
+import {
+  createSignal,
+  type Component,
+  For,
+  createEffect,
+  onCleanup,
+} from "solid-js";
 
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
@@ -9,15 +15,16 @@ const App: Component = () => {
   const [fetching, setFetching] = createSignal(false);
   // Really its just SearchType, but I'm not sure how to get the type to work
   const [searchType, setSearchType] = createSignal<string | SearchType>(
-    "hybrid"
+    "fulltext"
   );
-
+  
+  const apiUrl = import.meta.env.VITE_API_URL;
   const datasetId = import.meta.env.VITE_DATASET_ID;
   const apiKey = import.meta.env.VITE_API_KEY;
 
   const searchCompanies = () => {
     setFetching(true);
-    void fetch("https://api.trieve.ai/api/chunk/search", {
+    void fetch(`${apiUrl}/chunk/search`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -43,6 +50,18 @@ const App: Component = () => {
       }
     });
   };
+
+  // create a debounced version of the search function
+  createEffect((prevTimeout) => {
+    const curSearchQuery = searchQuery();
+    if (!curSearchQuery) return;
+
+    clearTimeout((prevTimeout ?? 0) as number);
+
+    const timeout = setTimeout(searchCompanies, 300);
+
+    onCleanup(() => clearTimeout(timeout));
+  }, null);
 
   return (
     <main class="bg-[#F5F5EE] min-h-screen px-[13px]">
@@ -108,7 +127,20 @@ const App: Component = () => {
             class="border-neutral-300 bg-white p-[10px] border rounded-md w-full"
             placeholder="Search..."
             autofocus
+            onInput={(e) => setSearchQuery(e.currentTarget.value)}
+            value={searchQuery()}
           ></input>
+        </div>
+        <div class="mt-2 border border-neutral-300 rounded-md">
+          <For each={resultChunks()}>
+            {(chunk) => {
+              console.log(chunk);
+              return (
+              <div class="p-5 border">
+                {chunk.metadata[0].chunk_html}
+              </div>
+            )}}
+          </For>
         </div>
       </section>
     </main>
