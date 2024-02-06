@@ -40,7 +40,6 @@ const App: Component = () => {
         page: 0,
         query: searchQuery(),
         search_type: searchType(),
-        cross_encoder: false,
       }),
     }).then((response) => {
       if (response.ok) {
