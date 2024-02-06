@@ -1,14 +1,16 @@
-import { createSignal, type Component, For } from 'solid-js';
+import { createSignal, type Component, For } from "solid-js";
 
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
 const App: Component = () => {
-  const [searchQuery, setSearchQuery] = createSignal('');
+  const [searchQuery, setSearchQuery] = createSignal("");
   const [resultChunks, setResultChunks] = createSignal<any>();
   const [totalPages, setTotalPages] = createSignal(0);
   const [fetching, setFetching] = createSignal(false);
   // Really its just SearchType, but I'm not sure how to get the type to work
-  const [searchType, setSearchType] = createSignal<string | SearchType>("hybrid");
+  const [searchType, setSearchType] = createSignal<string | SearchType>(
+    "hybrid"
+  );
 
   const datasetId = import.meta.env.VITE_DATASET_ID;
   const apiKey = import.meta.env.VITE_API_KEY;
@@ -20,13 +22,13 @@ const App: Component = () => {
       headers: {
         "Content-Type": "application/json",
         "TR-Dataset": datasetId,
-        "Authorization": apiKey,
+        Authorization: apiKey,
       },
       body: JSON.stringify({
         page: 0,
         query: searchQuery(),
         search_type: searchType(),
-        cross_encoder: false
+        cross_encoder: false,
       }),
     }).then((response) => {
       if (response.ok) {
@@ -40,78 +42,75 @@ const App: Component = () => {
         });
       }
     });
-  }
+  };
 
   return (
-    <main class="bg-[#F5F5EE] flex min-h-screen px-20 pt-40 flex-col space-y-5">
-      <p class="text-3xl"> Startup Directory Search </p>
-      <div class="flex space-x-2">
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery()}
-          onChange={(e) => setSearchQuery(e.currentTarget.value)}
-        />
-        <button onClick={searchCompanies}>Search</button>
+    <main class="bg-[#F5F5EE] min-h-screen px-[13px]">
+      <div class="sm:pr-[13px] border-b pt-6 lg:pt-9 pb-6 lg:pb-9">
+        <div class="prose prose-sm sm:prose-base max-w-full flex flex-col space-y-5">
+          <h1 class="text-3xl">Trieve Search for YC Startup Directory</h1>
+          <p>
+            <a
+              href="https://github.com/devflowinc/trieve"
+              class="text-[#268bd2] underline"
+            >
+              Trieve
+            </a>{" "}
+            offers a new way to build search. Compare to{" "}
+            <a href="https://www.algolia.com/" class="text-[#268bd2] underline">
+              Algolia
+            </a>{" "}
+            on the official Directory search at{" "}
+            <a
+              href="https://www.ycombinator.com/companies"
+              class="text-[#268bd2] underline"
+            >
+              ycombinator.com/companies
+            </a>
+            .
+          </p>
+          <p>
+            Since 2005, YC has invested in over 4,000 companies that have a
+            combined valuation of over $600B.
+          </p>
+          <p>
+            In this directory, you can search for YC companies by industry,
+            region, company size, and more.
+          </p>
+          <p>
+            To find jobs at these startups, visit{" "}
+            <a
+              href="https://ycombinator.com/jobs"
+              class="text-[#268bd2] underline"
+            >
+              Work at a Startup
+            </a>
+            .
+          </p>
+        </div>
       </div>
-      <div class="flex space-x-2 items-center">
-        <label for="searchType">Search Type</label>
-        <select
-          id="searchType"
-          name="searchType"
-          class="rounded-md border-0 bg-white py-1.5 pl-3 pr-10 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-magenta-600 sm:text-sm sm:leading-6"
-          value={searchType()}
-          onInput={(e) =>
-            setSearchType(e.currentTarget.value)
-          }
-        >
-          <option selected>hybrid</option>
-          <option>semantic</option>
-          <option>fulltext</option>
-        </select>
-      </div>
-      <p>Results: </p>
-      <For each={resultChunks()}>
-        {(resultChunk) => (
-          <div class="flex flex-col space-y-2">
-            <For each={resultChunk.metadata}>
-              {(metadata) => {
-                let matchedOn = "";
-                console.log(metadata);
-                if (metadata.tracking_id.includes("founder")) {
-                  matchedOn = "Company Founders";
-                } else if (metadata.tracking_id.includes("description")) {
-                  matchedOn = "Company Description";
-                }
-
-                return (
-                  <a class="bg-[#fdfdf8] p-5 border-b border-[#ccc] text-lg flex items-center relative" href={metadata.link}>
-                    <div class="relative flex w-full items-center justify-start">
-                      <div class="flex w-20 shrink-0 grow-0 basis-20 items-center pr-4">
-                        <img src={metadata.metadata.image_url} alt="" role="presentation" class="rounded-full bg-gray-100" />
-                      </div>
-                      <div class="flex flex-1 items-center justify-between">
-                        <div class="lg:max-w-[90%]">
-                          <div>
-                            <span class="text-xl font-bold">{metadata.metadata.company}</span>
-                            <span class="text-base font-thin"> Similatrity {resultChunk.score}</span>
-                          </div>
-                          <div class="flex">
-                            <span class="text-base font-thin">{metadata.metadata.title}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="">
-                        <p class="text-sm">Matched On: {matchedOn}</p>
-                      </div>
-                    </div>
-                  </a>
-                );
-              }}
-            </For>
+      <section class="relative isolate z-0 sm:pr-[13px] border-b pt-6 lg:pt-9 pb-6 lg:pb-9">
+        <div class="flex justify-end">
+          <div class="flex space-x-2 items-center text-base">
+            <label class="whitespace-nowrap">Sort by</label>
+            <select
+              id="location"
+              name="location"
+              class="bg-white block w-fit rounded-md py-2 pl-3 pr-6 border border-neutral-300 min-w-[150px]"
+            >
+              <option selected>Relevance</option>
+              <option>Launch Date</option>
+            </select>
           </div>
-        )}
-      </For>
+        </div>
+        <div class="p-5 mb-6 border bg-[#FDFDF8] rounded-md w-full mt-2 border-neutral-300">
+          <input
+            class="border-neutral-300 bg-white p-[10px] border rounded-md w-full"
+            placeholder="Search..."
+            autofocus
+          ></input>
+        </div>
+      </section>
     </main>
   );
 };
