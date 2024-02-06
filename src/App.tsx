@@ -21,9 +21,7 @@ const App: Component = () => {
   const [totalPages, setTotalPages] = createSignal(0);
   const [fetching, setFetching] = createSignal(false);
   // Really its just SearchType, but I'm not sure how to get the type to work
-  const [searchType, setSearchType] = createSignal<string | SearchType>(
-    "fulltext"
-  );
+  const [searchType, setSearchType] = createSignal<string | SearchType>("hybrid");
 
   const apiUrl = import.meta.env.VITE_API_URL;
   const datasetId = import.meta.env.VITE_DATASET_ID;
