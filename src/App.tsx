@@ -70,6 +70,8 @@ const App: Component = () => {
         search_type: searchType(),
         tag_set:
           curBatchTag === "all batches" ? [] : [curBatchTag.toUpperCase()],
+        highlight_results: false,
+        get_collisions: false,
       }),
     });
 
@@ -147,7 +149,6 @@ const App: Component = () => {
     const curSearchQuery = searchQuery();
     if (prevSearchQuery === curSearchQuery) return;
     setCurrentPage(0);
-    void searchCompanies(sortBy(), currentPage(), batchTag());
   }, "engineered organ replacement");
 
   createEffect((prevBatchTag) => {
