@@ -6,7 +6,10 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "lint": "prettier --write  \"**/*.{js,jsx,ts,tsx,md,mdx,}\" && eslint --fix \"src/**/*.{js,ts,jsx,tsx,}\"",
+    "lint:only": "eslint --fix \"src/**/*.{js,ts,jsx,tsx,}\"",
+    "lint:CI": "eslint --fix --output-file eslint_report.json --format json \"src/**/*.{js,ts,jsx,tsx,}\""
   },
   "license": "MIT",
   "devDependencies": {
@@ -17,12 +20,25 @@
     "solid-icons": "^1.1.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
+    "@types/sanitize-html": "^2.9.5",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.13.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-solid": "^0.13.0",
+    "prettier": "3.1.1",
+    "prettier-plugin-tailwindcss": "^0.5.11",
     "vite": "^5.0.11",
     "vite-plugin-solid": "^2.8.2"
   },
   "dependencies": {
     "solid-js": "^1.8.11",
-    "terracotta": "^1.0.4",
-    "trieve-ts": "https://github.com/fastfists/trieve-ts"
+    "terracotta": "^1.0.4"
   }
 }
