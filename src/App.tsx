@@ -5,7 +5,10 @@ import {
   createEffect,
   onCleanup,
   Show,
+  createMemo,
 } from "solid-js";
+import { BsX } from "solid-icons/bs";
+import { FiExternalLink, FiGithub } from "solid-icons/fi";
 
 const regex = /^[WS]\d{2}$/;
 
@@ -16,12 +19,17 @@ const isBatchTag = (tag: string) => {
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
 const App: Component = () => {
-  const [searchQuery, setSearchQuery] = createSignal("");
+  const [searchQuery, setSearchQuery] = createSignal(
+    "engineered organ replacement"
+  );
   const [resultChunks, setResultChunks] = createSignal<any>();
   const [totalPages, setTotalPages] = createSignal(0);
   const [fetching, setFetching] = createSignal(false);
   // Really its just SearchType, but I'm not sure how to get the type to work
-  const [searchType, setSearchType] = createSignal<string | SearchType>("hybrid");
+  const [searchType, setSearchType] = createSignal<string | SearchType>(
+    "semantic"
+  );
+  const [starCount, setStarCount] = createSignal(275);
 
   const apiUrl = import.meta.env.VITE_API_URL;
   const datasetId = import.meta.env.VITE_DATASET_ID;
@@ -66,6 +74,27 @@ const App: Component = () => {
 
     onCleanup(() => clearTimeout(timeout));
   }, null);
+
+  createEffect(() => {
+    void fetch("https://api.github.com/repos/devflowinc/trieve").then(
+      (response) => {
+        if (response.ok) {
+          void response.json().then((data) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            setStarCount(data.stargazers_count);
+          });
+        }
+      }
+    );
+  });
+
+  const tryOnAlgoliaUrl = createMemo(() => {
+    const queryParam = new URLSearchParams({ query: searchQuery() }).toString();
+    // encode as UriComponent
+    const query = encodeURIComponent(searchQuery());
+    const ret = `https://www.ycombinator.com/companies?query=${query}`;
+    return ret;
+  });
 
   return (
     <main class="bg-[#F5F5EE] min-h-screen px-[13px]">
@@ -122,7 +151,7 @@ const App: Component = () => {
               class="bg-white block w-fit rounded-md py-2 pl-3 pr-6 border border-neutral-300 min-w-[150px]"
             >
               <option selected>Relevance</option>
-              <option>Launch Date</option>
+              <option>Recency</option>
             </select>
           </div>
         </div>
@@ -134,17 +163,54 @@ const App: Component = () => {
             onInput={(e) => setSearchQuery(e.currentTarget.value)}
             value={searchQuery()}
           ></input>
+          <div class="flex items-center space-x-2">
+            <Show when={searchQuery()}>
+              <div class="flex space-x-2 px-3 py-1 rounded-full border w-fit mt-2 items-center">
+                <p class="text-sm">{searchQuery()}</p>
+                <button
+                  aria-label="clear search query"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <BsX class="w-3 h-3" />
+                </button>
+              </div>
+            </Show>
+            <Show when={searchQuery()}>
+              <a
+                class="flex space-x-2 px-3 py-1 rounded-full border w-fit mt-2 items-center"
+                href={tryOnAlgoliaUrl()}
+                target="_blank"
+                aria-label="try search with Algolia"
+              >
+                <p class="text-sm">Try With Algolia</p>
+                <FiExternalLink
+                  class="w-3 h-3"
+                  onClick={() => setSearchQuery("")}
+                />
+              </a>
+            </Show>
+            <a
+              class="flex space-x-2 px-3 py-1 rounded-full border w-fit mt-2 items-center"
+              href="https://github.com/devflowinc/trieve"
+              target="_blank"
+              aria-label="trieve github"
+            >
+              <p class="text-sm">Star Trieve | {starCount()}</p>
+              <FiGithub class="w-3 h-3" onClick={() => setSearchQuery("")} />
+            </a>
+          </div>
         </div>
-        <div class="mt-2 border border-neutral-300 rounded-md">
+        <div class="mt-2 border border-neutral-300 rounded-md overflow-hidden">
           <For each={resultChunks()}>
             {(chunk, idx) => {
-              console.log(chunk);
               return (
-                <div
+                <a
                   classList={{
-                    "p-5 flex space-x-4": true,
+                    "p-5 flex space-x-4 bg-[#FDFDF8] hover:bg-white": true,
                     "border-t border-neutral-300": idx() > 0,
                   }}
+                  href={`https://www.ycombinator.com${chunk.metadata[0].link}`}
+                  target="_blank"
                 >
                   <img
                     alt="logo"
@@ -166,33 +232,36 @@ const App: Component = () => {
                     <p>{chunk.metadata[0].metadata.company_one_liner}</p>
                     <div class="flex space-x-2">
                       <For each={chunk.metadata[0].tag_set.split(",")}>
-                        {(tag) => (
-                          <>
-                            <p class="px-[10px] py-1 bg-[#E6E6DD] text-xs rounded-md font-extralight flex space-x-1">
-                              <Show when={isBatchTag(tag)}>
-                                <svg
-                                  aria-hidden="true"
-                                  data-prefix="fab"
-                                  data-icon="y-combinator"
-                                  class="text-orange-500 w-4 h-4"
-                                  role="img"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 448 512"
-                                >
-                                  <path
-                                    fill="currentColor"
-                                    d="M448 32v448H0V32h448zM236 287.5L313.5 142h-32.7L235 233c-4.7 9.3-9 18.3-12.8 26.8L210 233l-45.2-91h-35l76.7 143.8v94.5H236v-92.8z"
-                                  ></path>
-                                </svg>
-                              </Show>
-                              <span>{tag}</span>
-                            </p>
-                          </>
-                        )}
+                        {(tag) =>
+                          tag &&
+                          tag !== "null" && (
+                            <>
+                              <p class="px-[10px] py-1 bg-[#E6E6DD] text-xs rounded-md font-extralight flex space-x-1">
+                                <Show when={isBatchTag(tag)}>
+                                  <svg
+                                    aria-hidden="true"
+                                    data-prefix="fab"
+                                    data-icon="y-combinator"
+                                    class="text-orange-500 w-4 h-4"
+                                    role="img"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 448 512"
+                                  >
+                                    <path
+                                      fill="currentColor"
+                                      d="M448 32v448H0V32h448zM236 287.5L313.5 142h-32.7L235 233c-4.7 9.3-9 18.3-12.8 26.8L210 233l-45.2-91h-35l76.7 143.8v94.5H236v-92.8z"
+                                    ></path>
+                                  </svg>
+                                </Show>
+                                <span>{tag}</span>
+                              </p>
+                            </>
+                          )
+                        }
                       </For>
                     </div>
                   </div>
-                </div>
+                </a>
               );
             }}
           </For>
