@@ -25,21 +25,22 @@ const isBatchTag = (tag: string) => {
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
 const App: Component = () => {
+  const apiUrl = import.meta.env.VITE_API_URL as string;
+  const datasetId = import.meta.env.VITE_DATASET_ID as string;
+  const apiKey = import.meta.env.VITE_API_KEY as string;
+
   const [searchQuery, setSearchQuery] = createSignal(
     "engineered organ replacement",
   );
   const [resultChunks, setResultChunks] = createSignal<any>();
   // eslint-disable-next-line solid/reactivity
-  const [, setFetching] = createSignal(false);
+  const [fetching, setFetching] = createSignal(true);
   const [searchType] = createSignal<SearchType>("semantic");
   const [starCount, setStarCount] = createSignal(275);
   const [sortBy, setSortBy] = createSignal("relevance");
+  const [currentPage, setCurrentPage] = createSignal(1);
 
-  const apiUrl = import.meta.env.VITE_API_URL as string;
-  const datasetId = import.meta.env.VITE_DATASET_ID as string;
-  const apiKey = import.meta.env.VITE_API_KEY as string;
-
-  const searchCompanies = async (curSortBy: string) => {
+  const searchCompanies = async (curSortBy: string, curPage: number) => {
     setFetching(true);
     const response = await fetch(`${apiUrl}/chunk/search`, {
       method: "POST",
@@ -49,7 +50,7 @@ const App: Component = () => {
         Authorization: apiKey,
       },
       body: JSON.stringify({
-        page: 0,
+        page: curPage,
         query: searchQuery(),
         search_type: searchType(),
       }),
@@ -64,7 +65,12 @@ const App: Component = () => {
           parseInt(a.metadata[0].metadata.batch.slice(-2)),
       );
     }
-    setResultChunks(scoreChunks);
+
+    if (curPage > 1) {
+      setResultChunks((prevChunks) => prevChunks.concat(scoreChunks));
+    } else {
+      setResultChunks(scoreChunks);
+    }
     setFetching(false);
   };
 
@@ -75,7 +81,10 @@ const App: Component = () => {
 
     clearTimeout((prevTimeout ?? 0) as number);
 
-    const timeout = setTimeout(() => void searchCompanies(sortBy()), 300);
+    const timeout = setTimeout(
+      () => void searchCompanies(sortBy(), currentPage()),
+      300,
+    );
 
     onCleanup(() => clearTimeout(timeout));
   }, null);
@@ -97,28 +106,46 @@ const App: Component = () => {
     const sortType = sortBy();
     if (previousSortType === sortType) return;
 
-    const curResultChunks = resultChunks();
+    const originalResultChunks = resultChunks();
+    const newResultChunks = [...originalResultChunks];
     if (sortType === "recency") {
-      curResultChunks.sort((a: any, b: any) => {
+      newResultChunks.sort((a: any, b: any) => {
         return (
           parseInt(b.metadata[0].metadata.batch.slice(-2)) -
           parseInt(a.metadata[0].metadata.batch.slice(-2))
         );
       });
     } else {
-      curResultChunks.sort(
+      newResultChunks.sort(
         (a: any, b: any) => parseFloat(b.score) - parseFloat(a.score),
       );
     }
 
-    setResultChunks(curResultChunks);
+    setResultChunks(newResultChunks);
 
     return sortType;
   }, "relevance");
 
+  createEffect((prevSearchQuery) => {
+    const curSearchQuery = searchQuery();
+    if (prevSearchQuery === curSearchQuery) return;
+    setCurrentPage(0);
+  }, "engineered organ replacement");
+
+  // infinite scroll effect to check if the user has scrolled to the bottom of the page and increment the page number to fetch more results
   createEffect(() => {
-    resultChunks();
-    console.log("resultChunks updated");
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop !==
+        document.documentElement.offsetHeight
+      )
+        return;
+      setCurrentPage((prevPage) => prevPage + 1);
+      void searchCompanies(sortBy(), currentPage());
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    onCleanup(() => window.removeEventListener("scroll", handleScroll));
   });
 
   const tryOnAlgoliaUrl = createMemo(() => {
@@ -195,7 +222,7 @@ const App: Component = () => {
             onInput={(e) => setSearchQuery(e.currentTarget.value)}
             value={searchQuery()}
           />
-          <div class="flex items-center space-x-2">
+          <div class="flex flex-wrap items-center gap-x-2">
             <Show when={searchQuery()}>
               <div class="mt-2 flex w-fit items-center space-x-2 rounded-full border px-3 py-1">
                 <p class="text-sm">{searchQuery()}</p>
@@ -232,7 +259,21 @@ const App: Component = () => {
             </a>
           </div>
         </div>
-        <div class="mt-2 overflow-hidden rounded-md border border-neutral-300">
+        <p
+          classList={{
+            "text-sm font-extralight text-[##4E4E4E]": true,
+            "animate-pulse": fetching(),
+          }}
+        >
+          Showing {fetching() ? "..." : resultChunks()?.length ?? 0} of 4518
+          companies
+        </p>
+        <div
+          classList={{
+            "mt-2 overflow-hidden rounded-md": true,
+            "border border-neutral-300": resultChunks()?.length ?? 0 > 0,
+          }}
+        >
           <For each={resultChunks()}>
             {(chunk, idx) => {
               return (
@@ -245,9 +286,11 @@ const App: Component = () => {
                   target="_blank"
                 >
                   <img
-                    alt="logo"
                     class="block h-20 w-20 rounded-full bg-gray-100 object-contain"
-                    src={chunk.metadata[0].metadata.company_logo_url}
+                    src={
+                      chunk.metadata[0].metadata.company_logo_url ||
+                      "https://cdn.iconscout.com/icon/free/png-256/free-404-error-1-529717.png?f=webp"
+                    }
                   />
                   <div class="flex flex-col space-y-1">
                     <div class="flex items-end space-x-2">
@@ -262,7 +305,7 @@ const App: Component = () => {
                       </p>
                     </div>
                     <p>{chunk.metadata[0].metadata.company_one_liner}</p>
-                    <div class="flex space-x-2">
+                    <div class="flex flex-wrap gap-x-2 gap-y-1">
                       <For each={chunk.metadata[0].tag_set.split(",")}>
                         {(tag) =>
                           tag &&
