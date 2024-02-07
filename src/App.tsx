@@ -15,12 +15,22 @@ import {
 } from "solid-js";
 import { BsX } from "solid-icons/bs";
 import { FiExternalLink, FiGithub } from "solid-icons/fi";
+import { FaSolidDice } from "solid-icons/fa";
 
 const regex = /^[WS]\d{2}$/;
 
 const isBatchTag = (tag: string) => {
   return regex.test(tag);
 };
+
+const demoSearchQueries = [
+  "issue detection for oil rigs",
+  "military defense tech",
+  "patient management CRM",
+  "gene editing diagnostics",
+  "RAG for contract search",
+  "Semantic search API",
+];
 
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
@@ -248,6 +258,19 @@ const App: Component = () => {
                 />
               </a>
             </Show>
+            <button
+              class="mt-2 flex w-fit items-center space-x-2 rounded-full border px-3 py-1"
+              onClick={() =>
+                setSearchQuery(
+                  demoSearchQueries[
+                    Math.floor(Math.random() * demoSearchQueries.length)
+                  ],
+                )
+              }
+            >
+              <p class="text-sm">Random Search</p>
+              <FaSolidDice class="h-3 w-3" />
+            </button>
             <a
               class="mt-2 flex w-fit items-center space-x-2 rounded-full border px-3 py-1"
               href="https://github.com/devflowinc/trieve"
