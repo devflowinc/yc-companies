@@ -49,8 +49,13 @@ const App: Component = () => {
   const [starCount, setStarCount] = createSignal(275);
   const [sortBy, setSortBy] = createSignal("relevance");
   const [currentPage, setCurrentPage] = createSignal(1);
+  const [batchTag, setBatchTag] = createSignal("all batches");
 
-  const searchCompanies = async (curSortBy: string, curPage: number) => {
+  const searchCompanies = async (
+    curSortBy: string,
+    curPage: number,
+    curBatchTag: string,
+  ) => {
     setFetching(true);
     const response = await fetch(`${apiUrl}/chunk/search`, {
       method: "POST",
@@ -63,6 +68,8 @@ const App: Component = () => {
         page: curPage,
         query: searchQuery(),
         search_type: searchType(),
+        tag_set:
+          curBatchTag === "all batches" ? [] : [curBatchTag.toUpperCase()],
       }),
     });
 
@@ -92,7 +99,7 @@ const App: Component = () => {
     clearTimeout((prevTimeout ?? 0) as number);
 
     const timeout = setTimeout(
-      () => void searchCompanies(sortBy(), currentPage()),
+      () => void searchCompanies(sortBy(), currentPage(), batchTag()),
       300,
     );
 
@@ -140,7 +147,15 @@ const App: Component = () => {
     const curSearchQuery = searchQuery();
     if (prevSearchQuery === curSearchQuery) return;
     setCurrentPage(0);
+    void searchCompanies(sortBy(), currentPage(), batchTag());
   }, "engineered organ replacement");
+
+  createEffect((prevBatchTag) => {
+    const curBatchTag = batchTag();
+    if (prevBatchTag === curBatchTag) return;
+    setCurrentPage(0);
+    void searchCompanies(sortBy(), currentPage(), batchTag());
+  }, "all batches");
 
   // infinite scroll effect to check if the user has scrolled to the bottom of the page and increment the page number to fetch more results
   createEffect(() => {
@@ -151,7 +166,7 @@ const App: Component = () => {
       )
         return;
       setCurrentPage((prevPage) => prevPage + 1);
-      void searchCompanies(sortBy(), currentPage());
+      void searchCompanies(sortBy(), currentPage(), batchTag());
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -210,7 +225,7 @@ const App: Component = () => {
         </div>
       </div>
       <section class="relative isolate z-0 border-b pb-6 pt-6 sm:pr-[13px] lg:pb-9 lg:pt-9">
-        <div class="flex justify-end">
+        <div class="flex justify-end space-x-3">
           <div class="flex items-center space-x-2 text-base">
             <label class="whitespace-nowrap">Sort by</label>
             <select
@@ -221,6 +236,27 @@ const App: Component = () => {
             >
               <option selected>Relevance</option>
               <option>Recency</option>
+            </select>
+          </div>
+          <div class="hidden items-center space-x-2 text-base sm:flex">
+            <label class="whitespace-nowrap">Batch</label>
+            <select
+              id="location"
+              name="location"
+              class="block w-fit min-w-[150px] rounded-md border border-neutral-300 bg-white py-2 pl-3 pr-6"
+              onChange={(e) => setBatchTag(e.currentTarget.value.toLowerCase())}
+            >
+              <option selected>All Batches</option>
+              <option>W24</option>
+              <For each={Array.from({ length: 18 }, (_, i) => i + 1)}>
+                {(i) => (
+                  <>
+                    <option>{`S${24 - i}`}</option>
+                    <option>{`W${24 - i}`}</option>
+                  </>
+                )}
+              </For>
+              <option>S05</option>
             </select>
           </div>
         </div>
