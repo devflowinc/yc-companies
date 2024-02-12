@@ -45,7 +45,7 @@ const App: Component = () => {
   const [resultChunks, setResultChunks] = createSignal<any>();
   // eslint-disable-next-line solid/reactivity
   const [fetching, setFetching] = createSignal(true);
-  const [searchType] = createSignal<SearchType>("semantic");
+  const [searchType, setSearchType] = createSignal<SearchType>("semantic");
   const [starCount, setStarCount] = createSignal(275);
   const [sortBy, setSortBy] = createSignal("relevance");
   const [currentPage, setCurrentPage] = createSignal(1);
@@ -158,6 +158,13 @@ const App: Component = () => {
     void searchCompanies(sortBy(), currentPage(), batchTag());
   }, "all batches");
 
+  createEffect((prevSearchType) => {
+    const curSearchType = searchType();
+    if (prevSearchType === curSearchType) return;
+    setCurrentPage(0);
+    void searchCompanies(sortBy(), currentPage(), batchTag());
+  }, "semantic");
+
   // infinite scroll effect to check if the user has scrolled to the bottom of the page and increment the page number to fetch more results
   createEffect(() => {
     const handleScroll = () => {
@@ -226,25 +233,40 @@ const App: Component = () => {
         </div>
       </div>
       <section class="relative isolate z-0 border-b pb-6 pt-6 sm:pr-[13px] lg:pb-9 lg:pt-9">
-        <div class="flex justify-end space-x-3">
+        <div class="flex flex-wrap justify-end gap-x-3 gap-y-2">
+          <div class="flex items-center space-x-2 text-base">
+            <label class="whitespace-nowrap">Search Type</label>
+            <select
+              id="location"
+              name="location"
+              class="block w-fit min-w-[130px] rounded-md border border-neutral-300 bg-white px-3 py-2"
+              onChange={(e) =>
+                setSearchType(e.currentTarget.value.toLowerCase() as SearchType)
+              }
+            >
+              <option selected>Semantic</option>
+              <option>Fulltext</option>
+              <option>Hybrid</option>
+            </select>
+          </div>
           <div class="flex items-center space-x-2 text-base">
             <label class="whitespace-nowrap">Sort by</label>
             <select
               id="location"
               name="location"
-              class="block w-fit min-w-[150px] rounded-md border border-neutral-300 bg-white py-2 pl-3 pr-6"
+              class="block w-fit min-w-[130px] rounded-md border border-neutral-300 bg-white px-3 py-2"
               onChange={(e) => setSortBy(e.currentTarget.value.toLowerCase())}
             >
               <option selected>Relevance</option>
               <option>Recency</option>
             </select>
           </div>
-          <div class="hidden items-center space-x-2 text-base sm:flex">
+          <div class="flex items-center space-x-2 text-base">
             <label class="whitespace-nowrap">Batch</label>
             <select
               id="location"
               name="location"
-              class="block w-fit min-w-[150px] rounded-md border border-neutral-300 bg-white py-2 pl-3 pr-6"
+              class="block w-fit min-w-[130px] rounded-md border border-neutral-300 bg-white px-3 py-2"
               onChange={(e) => setBatchTag(e.currentTarget.value.toLowerCase())}
             >
               <option selected>All Batches</option>
