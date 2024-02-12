@@ -16,6 +16,9 @@ import {
 import { BsX } from "solid-icons/bs";
 import { FiExternalLink, FiGithub } from "solid-icons/fi";
 import { FaSolidDice } from "solid-icons/fa";
+import { VsGlobe } from "solid-icons/vs";
+import { SiCrunchbase } from "solid-icons/si";
+import { FaBrandsLinkedin } from "solid-icons/fa";
 
 const regex = /^[WS]\d{2}$/;
 
@@ -24,6 +27,7 @@ const isBatchTag = (tag: string) => {
 };
 
 const demoSearchQueries = [
+  "open source EHR software",
   "issue detection for oil rigs",
   "military defense tech",
   "patient management CRM",
@@ -32,6 +36,8 @@ const demoSearchQueries = [
   "Semantic search API",
 ];
 
+const defaultSearchQuery = demoSearchQueries[0];
+
 type SearchType = "semantic" | "hybrid" | "fulltext";
 
 const App: Component = () => {
@@ -39,9 +45,7 @@ const App: Component = () => {
   const datasetId = import.meta.env.VITE_DATASET_ID as string;
   const apiKey = import.meta.env.VITE_API_KEY as string;
 
-  const [searchQuery, setSearchQuery] = createSignal(
-    "engineered organ replacement",
-  );
+  const [searchQuery, setSearchQuery] = createSignal(defaultSearchQuery);
   const [resultChunks, setResultChunks] = createSignal<any>();
   // eslint-disable-next-line solid/reactivity
   const [fetching, setFetching] = createSignal(true);
@@ -149,7 +153,7 @@ const App: Component = () => {
     const curSearchQuery = searchQuery();
     if (prevSearchQuery === curSearchQuery) return;
     setCurrentPage(0);
-  }, "engineered organ replacement");
+  }, defaultSearchQuery);
 
   createEffect((prevBatchTag) => {
     const curBatchTag = batchTag();
@@ -416,6 +420,42 @@ const App: Component = () => {
                           )
                         }
                       </For>
+                    </div>
+                    <div>
+                      <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                        <Show when={chunk.metadata[0].metadata.company_website}>
+                          {(website) => (
+                            <a href={website()} target="_blank">
+                              <VsGlobe class="h-5 w-5 fill-current text-blue-500" />
+                            </a>
+                          )}
+                        </Show>
+                        <Show when={chunk.metadata[0].metadata.company_twitter}>
+                          {(twitter) => (
+                            <a href={twitter()} target="_blank">
+                              <span class="icon-[mingcute--social-x-line] h-5 w-5" />
+                            </a>
+                          )}
+                        </Show>
+                        <Show
+                          when={chunk.metadata[0].metadata.company_linkedin}
+                        >
+                          {(linkedin) => (
+                            <a href={linkedin()} target="_blank">
+                              <FaBrandsLinkedin class="h-5 w-5 fill-current text-[#0a66c2]" />
+                            </a>
+                          )}
+                        </Show>
+                        <Show
+                          when={chunk.metadata[0].metadata.company_crunchbase}
+                        >
+                          {(crunchbase) => (
+                            <a href={crunchbase()} target="_blank">
+                              <SiCrunchbase class="h-5 w-5 fill-current text-[#146aff]" />
+                            </a>
+                          )}
+                        </Show>
+                      </div>
                     </div>
                   </div>
                 </a>

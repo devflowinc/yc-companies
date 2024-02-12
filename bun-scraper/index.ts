@@ -1,3 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /// <reference lib="dom" />
 
 import { Window } from "happy-dom";
@@ -5,7 +13,7 @@ import { Window } from "happy-dom";
 const window = new Window();
 const document = window.document;
 
-const API_URL = Bun.env.API_URL;
+const API_URL = Bun.env.API_URL as string;
 
 export interface CreateChunkData {
   chunk_html: string;
@@ -38,7 +46,7 @@ const createChunkGroup = async (name: string, description: string) => {
   console.log("success creating chunk_group", responseJson.id);
 
   const id = responseJson.id;
-  return id;
+  return id as string;
 };
 
 const createChunk = async (chunkData: CreateChunkData) => {
@@ -66,7 +74,7 @@ const createChunk = async (chunkData: CreateChunkData) => {
   console.log("success creating chunk", responseJson.chunk_metadata.id);
   const chunkId = responseJson.chunk_metadata.id;
 
-  return chunkId;
+  return chunkId as string;
 };
 
 const processCompanyChunk = async (
@@ -74,8 +82,8 @@ const processCompanyChunk = async (
   groupIds: string[],
 ) => {
   const group_id = await createChunkGroup(
-    bulkDataCompany.name,
-    bulkDataCompany.one_liner,
+    bulkDataCompany.name as string,
+    bulkDataCompany.one_liner as string,
   );
 
   const companyName = "<h1>" + bulkDataCompany.name + "</h1>";
@@ -123,7 +131,7 @@ const processCompanyChunk = async (
   const company_linkedin = bulkDataCompany.linkedin_url;
   const company_twitter = bulkDataCompany.twitter_url;
   const company_facebook = bulkDataCompany.facebook_url;
-  const company_crunchbase = bulkDataCompany.crunchbase_url;
+  const company_crunchbase = bulkDataCompany.cb_url;
   const company_logo_url = bulkDataCompany.small_logo_url;
   const metadata = {
     company_name,
@@ -216,7 +224,7 @@ const processLink = async (companyUrl: string, groupIds: string[]) => {
         return;
       }
 
-      const bulkData = JSON.parse(dataPage).props as any;
+      const bulkData = JSON.parse(dataPage).props;
       const companyData = bulkData.company;
       const companyGroupId = await processCompanyChunk(companyData, groupIds);
 

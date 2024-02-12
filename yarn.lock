@@ -398,6 +398,25 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.2.tgz#d9fae00a2d5cb40f92cfe64b47ad749fbc38f917"
   integrity sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==
 
+"@iconify-json/mingcute@^1.1.16":
+  version "1.1.16"
+  resolved "https://registry.yarnpkg.com/@iconify-json/mingcute/-/mingcute-1.1.16.tgz#0bd0c8eab3dc2fa06e0bafa2afb7b7f720f77141"
+  integrity sha512-iiVYjOPFyftzvBqN3cqYVfzuqSJL2n7vduX8UsmaaIB33EM6hKNJPntxVt700jHwyux/ibHsgUo8paeHBoxpWQ==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify/tailwind@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@iconify/tailwind/-/tailwind-0.1.4.tgz#c5baee6e863d01d7b1d5ff3f0c5cd4fc49b2c0c7"
+  integrity sha512-U7RzcU2fkwOfMDsGQ3mtpLIaApSnqb+vgcJJknPPbg8/NF5s7tI1o5otEMfcpnLGk4PbYB8bxmKTz7IJVUlU2Q==
+  dependencies:
+    "@iconify/types" "^2.0.0"
+
+"@iconify/types@*", "@iconify/types@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@iconify/types/-/types-2.0.0.tgz#ab0e9ea681d6c8a1214f30cd741fe3a20cc57f57"
+  integrity sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==
+
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
   resolved "https://registry.yarnpkg.com/@isaacs/cliui/-/cliui-8.0.2.tgz#b37667b7bc181c168782259bab42474fbf52b550"
