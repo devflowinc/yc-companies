@@ -20,6 +20,11 @@ import { VsGlobe } from "solid-icons/vs";
 import { SiCrunchbase } from "solid-icons/si";
 import { FaBrandsLinkedin } from "solid-icons/fa";
 
+interface SearchAbortController {
+  abortController?: AbortController;
+  timeout?: NodeJS.Timeout;
+}
+
 const regex = /^[WS]\d{2}$/;
 
 const isBatchTag = (tag: string) => {
@@ -34,6 +39,7 @@ const demoSearchQueries = [
   "gene editing diagnostics",
   "RAG for contract search",
   "Semantic search API",
+  "Browser based IDE",
 ];
 
 const defaultSearchQuery = demoSearchQueries[0];
@@ -49,7 +55,7 @@ const App: Component = () => {
   const [resultChunks, setResultChunks] = createSignal<any>();
   // eslint-disable-next-line solid/reactivity
   const [fetching, setFetching] = createSignal(true);
-  const [searchType, setSearchType] = createSignal<SearchType>("semantic");
+  const [searchType, setSearchType] = createSignal<SearchType>("hybrid");
   const [starCount, setStarCount] = createSignal(275);
   const [sortBy, setSortBy] = createSignal("relevance");
   const [currentPage, setCurrentPage] = createSignal(1);
@@ -59,6 +65,7 @@ const App: Component = () => {
     curSortBy: string,
     curPage: number,
     curBatchTag: string,
+    abortController: AbortController,
   ) => {
     setFetching(true);
     const response = await fetch(`${apiUrl}/chunk/search`, {
@@ -77,6 +84,7 @@ const App: Component = () => {
         highlight_results: false,
         get_collisions: false,
       }),
+      signal: abortController.signal,
     });
 
     const data = await response.json();
@@ -98,19 +106,37 @@ const App: Component = () => {
   };
 
   // create a debounced version of the search function
-  createEffect((prevTimeout) => {
-    const curSearchQuery = searchQuery();
-    if (!curSearchQuery) return;
+  createEffect(
+    (prevController: SearchAbortController | undefined) => {
+      const curSearchQuery = searchQuery();
+      if (!curSearchQuery) return;
 
-    clearTimeout((prevTimeout ?? 0) as number);
+      searchType();
+      currentPage();
+      batchTag();
 
-    const timeout = setTimeout(
-      () => void searchCompanies(sortBy(), currentPage(), batchTag()),
-      300,
-    );
+      clearTimeout(prevController?.timeout ?? 0);
+      prevController?.abortController?.abort();
 
-    onCleanup(() => clearTimeout(timeout));
-  }, null);
+      const newController = new AbortController();
+
+      const timeout = setTimeout(
+        () =>
+          void searchCompanies(
+            sortBy(),
+            currentPage(),
+            batchTag(),
+            newController,
+          ),
+        300,
+      );
+
+      onCleanup(() => clearTimeout(timeout));
+
+      return { abortController: newController, timeout };
+    },
+    { abortController: undefined, timeout: undefined },
+  );
 
   createEffect(() => {
     void fetch("https://api.github.com/repos/devflowinc/trieve").then(
@@ -159,15 +185,13 @@ const App: Component = () => {
     const curBatchTag = batchTag();
     if (prevBatchTag === curBatchTag) return;
     setCurrentPage(0);
-    void searchCompanies(sortBy(), currentPage(), batchTag());
   }, "all batches");
 
   createEffect((prevSearchType) => {
     const curSearchType = searchType();
     if (prevSearchType === curSearchType) return;
     setCurrentPage(0);
-    void searchCompanies(sortBy(), currentPage(), batchTag());
-  }, "semantic");
+  }, "hybrid");
 
   // infinite scroll effect to check if the user has scrolled to the bottom of the page and increment the page number to fetch more results
   createEffect(() => {
@@ -178,7 +202,6 @@ const App: Component = () => {
       )
         return;
       setCurrentPage((prevPage) => prevPage + 1);
-      void searchCompanies(sortBy(), currentPage(), batchTag());
     };
 
     window.addEventListener("scroll", handleScroll);
