@@ -197,10 +197,19 @@ const App: Component = () => {
   createEffect(() => {
     const handleScroll = () => {
       if (
-        window.innerHeight + document.documentElement.scrollTop - 1000 <
+        window.innerHeight + document.documentElement.scrollTop + 1000 >
         document.documentElement.offsetHeight
-      )
+      ) {
+        console.log(
+          window.innerHeight,
+          window.innerHeight + document.documentElement.scrollTop,
+          document.documentElement.offsetHeight,
+        );
+        if (fetching()) return;
+        setFetching(true);
+
         setCurrentPage((prevPage) => prevPage + 1);
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
