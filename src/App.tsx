@@ -271,9 +271,9 @@ const App: Component = () => {
                 setSearchType(e.currentTarget.value.toLowerCase() as SearchType)
               }
             >
-              <option selected>Semantic</option>
+              <option selected>Hybrid</option>
+              <option>Semantic</option>
               <option>Fulltext</option>
-              <option>Hybrid</option>
             </select>
           </div>
           <div class="flex items-center space-x-2 text-base">
