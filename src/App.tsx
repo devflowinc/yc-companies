@@ -177,19 +177,19 @@ const App: Component = () => {
 
   createEffect((prevSearchQuery) => {
     const curSearchQuery = searchQuery();
-    if (prevSearchQuery === curSearchQuery) return;
+    if (prevSearchQuery === curSearchQuery) return curSearchQuery;
     setCurrentPage(0);
   }, defaultSearchQuery);
 
   createEffect((prevBatchTag) => {
     const curBatchTag = batchTag();
-    if (prevBatchTag === curBatchTag) return;
+    if (prevBatchTag === curBatchTag) return curBatchTag;
     setCurrentPage(0);
   }, "all batches");
 
   createEffect((prevSearchType) => {
     const curSearchType = searchType();
-    if (prevSearchType === curSearchType) return;
+    if (prevSearchType === curSearchType) return curSearchType;
     setCurrentPage(0);
   }, "hybrid");
 
@@ -197,11 +197,10 @@ const App: Component = () => {
   createEffect(() => {
     const handleScroll = () => {
       if (
-        window.innerHeight + document.documentElement.scrollTop !==
+        window.innerHeight + document.documentElement.scrollTop - 1000 <
         document.documentElement.offsetHeight
       )
-        return;
-      setCurrentPage((prevPage) => prevPage + 1);
+        setCurrentPage((prevPage) => prevPage + 1);
     };
 
     window.addEventListener("scroll", handleScroll);
