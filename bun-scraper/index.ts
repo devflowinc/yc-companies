@@ -21,6 +21,7 @@ export interface CreateChunkData {
   link: string;
   tag_set: string[];
   tracking_id: string;
+  upsert_by_tracking_id?: boolean;
   metadata: Object;
 }
 
@@ -153,11 +154,12 @@ const processCompanyChunk = async (
 
   const chunkData: CreateChunkData = {
     chunk_html,
-    group_ids: [group_id, ...groupIds],
+    group_ids: [],
     link,
     tag_set: tag_set.split(","),
     tracking_id,
     metadata,
+    upsert_by_tracking_id: true,
   };
 
   await createChunk(chunkData);
@@ -200,7 +202,7 @@ const processFounderChunk = async (
 
   const chunkData: CreateChunkData = {
     chunk_html,
-    group_ids: groupIds,
+    group_ids: [],
     link,
     tag_set: tag_set.split(","),
     tracking_id,

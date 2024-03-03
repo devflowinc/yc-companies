@@ -98,7 +98,18 @@ const App: Component = () => {
     }
 
     if (curPage > 1) {
-      setResultChunks((prevChunks) => prevChunks.concat(scoreChunks));
+      setResultChunks((prevChunks) => {
+        // filter out duplicates
+        const newChunks = scoreChunks.filter(
+          (newChunk: any) =>
+            !prevChunks.some(
+              (prevChunk: any) =>
+                prevChunk.metadata[0].metadata.company_name ===
+                newChunk.metadata[0].metadata.company_name,
+            ),
+        );
+        return prevChunks.concat(newChunks);
+      });
     } else {
       setResultChunks(scoreChunks);
     }
@@ -382,7 +393,7 @@ const App: Component = () => {
             "animate-pulse": fetching(),
           }}
         >
-          Showing {fetching() ? "..." : resultChunks()?.length ?? 0} of 4518
+          Showing {fetching() ? "..." : resultChunks()?.length ?? 0} of 4611
           companies
         </p>
         <div
