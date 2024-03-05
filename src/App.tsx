@@ -139,7 +139,7 @@ const App: Component = () => {
             batchTag(),
             newController,
           ),
-        300,
+        20,
       );
 
       onCleanup(() => clearTimeout(timeout));
