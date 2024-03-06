@@ -366,11 +366,16 @@ const App: Component = () => {
             <button
               class="mt-2 flex w-fit items-center space-x-2 rounded-full border px-3 py-1"
               onClick={() =>
-                setSearchQuery(
-                  demoSearchQueries[
-                    Math.floor(Math.random() * demoSearchQueries.length)
-                  ],
-                )
+                setSearchQuery((prevQuery) => {
+                  let randomQuery = prevQuery;
+                  while (randomQuery === prevQuery) {
+                    randomQuery =
+                      demoSearchQueries[
+                        Math.floor(Math.random() * demoSearchQueries.length)
+                      ];
+                  }
+                  return randomQuery;
+                })
               }
             >
               <p class="text-sm">Random Search</p>
