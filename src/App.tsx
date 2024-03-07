@@ -79,17 +79,20 @@ const App: Component = () => {
         page: curPage,
         query: searchQuery(),
         search_type: searchType(),
-        filters: {
-          must: [
-            {
-              field: "tag_set",
-              match:
-                curBatchTag === "all batches"
-                  ? []
-                  : [curBatchTag.toUpperCase()],
-            },
-          ],
-        },
+        filters:
+          curBatchTag === "all batches"
+            ? null
+            : {
+                must: [
+                  {
+                    field: "tag_set",
+                    match:
+                      curBatchTag === "all batches"
+                        ? []
+                        : [curBatchTag.toUpperCase()],
+                  },
+                ],
+              },
         highlight_results: false,
         get_collisions: false,
       }),
