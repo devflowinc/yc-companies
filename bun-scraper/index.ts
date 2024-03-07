@@ -154,7 +154,7 @@ const processCompanyChunk = async (
 
   const chunkData: CreateChunkData = {
     chunk_html,
-    group_ids: [],
+    group_ids: [group_id, ...groupIds],
     link,
     tag_set: tag_set.split(","),
     tracking_id,
@@ -202,7 +202,7 @@ const processFounderChunk = async (
 
   const chunkData: CreateChunkData = {
     chunk_html,
-    group_ids: [],
+    group_ids: groupIds,
     link,
     tag_set: tag_set.split(","),
     tracking_id,
