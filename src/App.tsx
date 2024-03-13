@@ -51,15 +51,25 @@ const App: Component = () => {
   const datasetId = import.meta.env.VITE_DATASET_ID as string;
   const apiKey = import.meta.env.VITE_API_KEY as string;
 
-  const [searchQuery, setSearchQuery] = createSignal(defaultSearchQuery);
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const [searchQuery, setSearchQuery] = createSignal(
+    urlParams.get("q") ?? defaultSearchQuery,
+  );
   const [resultChunks, setResultChunks] = createSignal<any>();
   // eslint-disable-next-line solid/reactivity
   const [fetching, setFetching] = createSignal(true);
-  const [searchType, setSearchType] = createSignal<SearchType>("hybrid");
+  const [searchType, setSearchType] = createSignal<SearchType>(
+    (urlParams.get("search_type") as SearchType) ?? "hybrid",
+  );
   const [starCount, setStarCount] = createSignal(275);
-  const [sortBy, setSortBy] = createSignal("relevance");
+  const [sortBy, setSortBy] = createSignal(
+    urlParams.get("sort_by") ?? "relevance",
+  );
   const [currentPage, setCurrentPage] = createSignal(1);
-  const [batchTag, setBatchTag] = createSignal("all batches");
+  const [batchTag, setBatchTag] = createSignal(
+    urlParams.get("batch_tag") ?? "all batches",
+  );
 
   const searchCompanies = async (
     curSortBy: string,
@@ -134,9 +144,16 @@ const App: Component = () => {
       const curSearchQuery = searchQuery();
       if (!curSearchQuery) return;
 
-      searchType();
-      currentPage();
-      batchTag();
+      urlParams.set("q", curSearchQuery);
+      urlParams.set("search_type", searchType());
+      urlParams.set("sort_by", sortBy());
+      urlParams.set("batch_tag", batchTag());
+
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}?${urlParams.toString()}`,
+      );
 
       clearTimeout(prevController?.timeout ?? 0);
       prevController?.abortController?.abort();
@@ -301,10 +318,13 @@ const App: Component = () => {
               onChange={(e) =>
                 setSearchType(e.currentTarget.value.toLowerCase() as SearchType)
               }
+              value={searchType()}
             >
-              <option selected>Hybrid</option>
-              <option>Semantic</option>
-              <option>Fulltext</option>
+              <option selected value="hybrid">
+                Hybrid
+              </option>
+              <option value="semantic">Semantic</option>
+              <option value="fulltext">Fulltext</option>
             </select>
           </div>
           <div class="flex items-center space-x-2 text-base">
@@ -314,9 +334,12 @@ const App: Component = () => {
               name="location"
               class="block w-fit min-w-[130px] rounded-md border border-neutral-300 bg-white px-3 py-2"
               onChange={(e) => setSortBy(e.currentTarget.value.toLowerCase())}
+              value={sortBy()}
             >
-              <option selected>Relevance</option>
-              <option>Recency</option>
+              <option selected value="relevance">
+                Relevance
+              </option>
+              <option value="recency">Recency</option>
             </select>
           </div>
           <div class="flex items-center space-x-2 text-base">
@@ -326,14 +349,21 @@ const App: Component = () => {
               name="location"
               class="block w-fit min-w-[130px] rounded-md border border-neutral-300 bg-white px-3 py-2"
               onChange={(e) => setBatchTag(e.currentTarget.value.toLowerCase())}
+              value={batchTag()}
             >
-              <option selected>All Batches</option>
-              <option>W24</option>
+              <option selected value="all batches">
+                All Batches
+              </option>
+              <option value="w24">W24</option>
               <For each={Array.from({ length: 18 }, (_, i) => i + 1)}>
                 {(i) => (
                   <>
-                    <option>{`S${24 - i}`}</option>
-                    <option>{`W${24 - i}`}</option>
+                    <option value={`S${24 - i}`.toLowerCase()}>{`S${
+                      24 - i
+                    }`}</option>
+                    <option value={`S${24 - i}`.toLowerCase()}>{`W${
+                      24 - i
+                    }`}</option>
                   </>
                 )}
               </For>
