@@ -17,7 +17,7 @@ const API_URL = Bun.env.API_URL as string;
 
 export interface CreateChunkData {
   chunk_html: string;
-  group_ids: string[];
+  group_ids?: string[];
   link: string;
   tag_set: string[];
   tracking_id: string;
@@ -159,7 +159,7 @@ const processCompanyChunk = async (
     tag_set: tag_set.split(","),
     tracking_id,
     metadata,
-    upsert_by_tracking_id: true,
+    upsert_by_tracking_id: false,
   };
 
   await createChunk(chunkData);
