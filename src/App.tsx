@@ -440,7 +440,7 @@ const App: Component = () => {
             "animate-pulse": fetching(),
           }}
         >
-          Showing {fetching() ? "..." : resultChunks()?.length ?? 0} of 4611
+          Showing {fetching() ? "..." : resultChunks()?.length ?? 0} of 4653
           companies
         </p>
         <div
