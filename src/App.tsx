@@ -78,6 +78,7 @@ const App: Component = () => {
     abortController: AbortController,
   ) => {
     setFetching(true);
+
     const response = await fetch(`${apiUrl}/chunk/search`, {
       method: "POST",
       headers: {
@@ -130,6 +131,7 @@ const App: Component = () => {
                 newChunk.metadata[0].metadata.company_name,
             ),
         );
+
         return prevChunks.concat(newChunks);
       });
     } else {
@@ -142,6 +144,7 @@ const App: Component = () => {
   createEffect(
     (prevController: SearchAbortController | undefined) => {
       const curSearchQuery = searchQuery();
+      const curPage = currentPage();
       if (!curSearchQuery) return;
 
       urlParams.set("q", curSearchQuery);
@@ -162,12 +165,7 @@ const App: Component = () => {
 
       const timeout = setTimeout(
         () =>
-          void searchCompanies(
-            sortBy(),
-            currentPage(),
-            batchTag(),
-            newController,
-          ),
+          void searchCompanies(sortBy(), curPage, batchTag(), newController),
         20,
       );
 
@@ -240,15 +238,10 @@ const App: Component = () => {
         window.innerHeight + document.documentElement.scrollTop + 1000 >
         document.documentElement.offsetHeight
       ) {
-        console.log(
-          window.innerHeight,
-          window.innerHeight + document.documentElement.scrollTop,
-          document.documentElement.offsetHeight,
-        );
         if (fetching()) return;
-        setFetching(true);
 
         setCurrentPage((prevPage) => prevPage + 1);
+        setFetching(true);
       }
     };
 
