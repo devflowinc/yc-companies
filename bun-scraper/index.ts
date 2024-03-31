@@ -82,10 +82,10 @@ const processCompanyChunk = async (
   bulkDataCompany: any,
   groupIds: string[],
 ) => {
-  const group_id = await createChunkGroup(
-    bulkDataCompany.name as string,
-    bulkDataCompany.one_liner as string,
-  );
+  // const group_id = await createChunkGroup(
+  //   bulkDataCompany.name as string,
+  //   bulkDataCompany.one_liner as string,
+  // );
 
   const companyName = "<h1>" + bulkDataCompany.name + "</h1>";
   const companyOneLiner = "<h3>" + bulkDataCompany.one_liner + "</h3>";
@@ -154,7 +154,6 @@ const processCompanyChunk = async (
 
   const chunkData: CreateChunkData = {
     chunk_html,
-    group_ids: [group_id, ...groupIds],
     link,
     tag_set: tag_set.split(","),
     tracking_id,
@@ -163,8 +162,6 @@ const processCompanyChunk = async (
   };
 
   await createChunk(chunkData);
-
-  return group_id;
 };
 
 const processFounderChunk = async (
@@ -241,17 +238,17 @@ const processLink = async (companyUrl: string, groupIds: string[]) => {
   }
 };
 
-const companyGroupId = await createChunkGroup(
-  "YC Companies",
-  "Y Combinator companies",
-);
-const foundersGroupId = await createChunkGroup(
-  "YC Founders",
-  "Y Combinator founders",
-);
+// const companyGroupId = await createChunkGroup(
+//   "YC Companies",
+//   "Y Combinator companies",
+// );
+// const foundersGroupId = await createChunkGroup(
+//   "YC Founders",
+//   "Y Combinator founders",
+// );
 const companyList = Bun.file("./yc-company-links.json");
 const companyLinks = JSON.parse(await companyList.text());
 
 for (const companyUrl of companyLinks) {
-  await processLink(companyUrl, [companyGroupId, foundersGroupId]);
+  await processLink(companyUrl, []);
 }
